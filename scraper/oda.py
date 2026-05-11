@@ -88,7 +88,11 @@ async def fetch_prices_batch(products: list[dict]) -> list[dict]:
                         "price_date": today,
                         "price": price,
                         "is_promo": bool(discount),
-                        "promo_price": float(discount["price"]) if discount and "price" in discount else None,
+                        "promo_price": (
+                            float(discount["price"])
+                            if discount and "price" in discount
+                            else None
+                        ),
                         "source": "oda_api",
                     }
                 )
