@@ -22,7 +22,7 @@ async def close_pool() -> None:
         _pool = None
 
 
-async def fetch_active_products() -> list[dict]:
+async def fetch_active_products() -> list[dict[str, object]]:
     pool = await get_pool()
     rows = await pool.fetch("SELECT ean, name, base_price_p0 FROM products WHERE active = TRUE")
     return [dict(r) for r in rows]
@@ -42,7 +42,7 @@ async def update_ean(old_ean: str, new_ean: str, base_price: float) -> None:
     )
 
 
-async def upsert_prices(records: list[dict]) -> int:
+async def upsert_prices(records: list[dict[str, object]]) -> int:
     """Bulk-insert price rows; skips duplicates via ON CONFLICT DO NOTHING."""
     if not records:
         return 0
@@ -52,7 +52,7 @@ async def upsert_prices(records: list[dict]) -> int:
         VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT (ean, price_date, source) DO NOTHING
     """
-    rows = [
+    rows: list[tuple[object, ...]] = [
         (
             r["ean"],
             r["price_date"],

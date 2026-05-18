@@ -60,7 +60,7 @@ async def run() -> None:
         meny_rows = await meny.fetch_prices_batch([p["ean"] for p in missing])
 
     # Strip internal db_ean key before insert
-    all_rows = [
+    all_rows: list[dict[str, object]] = [
         {k: v for k, v in r.items() if k != "db_ean"}
         for r in kassal_rows + oda_rows + meny_rows
     ]

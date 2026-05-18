@@ -36,7 +36,7 @@ _HEADERS = {
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
 )
-async def _search_oda(session: AsyncSession, name: str) -> list[dict]:
+async def _search_oda(session: AsyncSession, name: str) -> list[dict[str, object]]:
     resp = await session.get(
         ODA_SEARCH_API,
         params={"q": name, "page_size": 5},
@@ -49,16 +49,18 @@ async def _search_oda(session: AsyncSession, name: str) -> list[dict]:
     return resp.json().get("products", [])
 
 
-async def fetch_prices_batch(products: list[dict]) -> list[dict]:
+async def fetch_prices_batch(
+    products: list[dict[str, object]],
+) -> list[dict[str, object]]:
     """Name-based search fallback. Returns price rows keyed by our db EAN.
 
     Accepts the same {ean, name} dict list as the Kassal scraper.
     """
     today = date.today()
-    results: list[dict] = []
+    results: list[dict[str, object]] = []
     sem = asyncio.Semaphore(settings.max_concurrency)
 
-    async def fetch_one(session: AsyncSession, product: dict) -> None:
+    async def fetch_one(session: AsyncSession, product: dict[str, object]) -> None:
         db_ean: str = product["ean"]
         name: str = product["name"]
         base_price: float | None = product.get("base_price_p0")
