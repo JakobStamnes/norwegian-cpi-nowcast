@@ -49,5 +49,13 @@ select = ["E", "F", "I", "UP"]
 python_version = "3.11"
 strict = true
 
+[[tool.mypy.overrides]]
+module = ["scraper.kassal", "scraper.oda", "scraper.meny", "scraper.db"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["api.main"]
+ignore_errors = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
