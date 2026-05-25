@@ -48,16 +48,16 @@ async def run() -> None:
     log.info("kassal_coverage", covered=len(covered_eans), missing=len(missing))
 
     # Fallback 1: Oda (name-based search, accepts same {ean, name} dicts as Kassal)
-    oda_rows: list[dict] = []
+    oda_rows: list[dict[str, object]] = []
     if missing:
         oda_rows = await oda.fetch_prices_batch(missing)
         covered_oda = {r["ean"] for r in oda_rows}
         missing = [p for p in missing if p["ean"] not in covered_oda]
 
     # Fallback 2: Meny (disabled — NGData API endpoint no longer responds)
-    meny_rows: list[dict] = []
+    meny_rows: list[dict[str, object]] = []
     if missing:
-        meny_rows = await meny.fetch_prices_batch([p["ean"] for p in missing])
+        meny_rows = await meny.fetch_prices_batch([p["ean"] for p in missing])  # type: ignore[misc]
 
     # Strip internal db_ean key before insert
     all_rows = [

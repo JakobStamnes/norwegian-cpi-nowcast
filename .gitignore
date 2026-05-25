@@ -16,3 +16,5 @@ node_modules/
 
 # Model artifacts — committed intentionally via retrain workflow, not ad-hoc
 model/artifacts/training_data.csv
+.coverage
+.pytest_cache/

@@ -31,7 +31,7 @@ _HEADERS = {
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
 )
-async def _post_search(session: AsyncSession, ean: str) -> list[dict]:
+async def _post_search(session: AsyncSession[bytes], ean: str) -> list[dict[str, object]]:
     payload = {
         "query": ean,
         "size": 5,
@@ -44,10 +44,10 @@ async def _post_search(session: AsyncSession, ean: str) -> list[dict]:
         timeout=settings.request_timeout,
     )
     resp.raise_for_status()
-    return resp.json().get("hits", {}).get("hits", [])
+    return resp.json().get("hits", {}).get("hits", [])  # type: ignore[return-value]
 
 
-async def fetch_prices_batch(eans: list[str]) -> list[dict]:
+async def fetch_prices_batch(eans: list[str]) -> list[dict[str, object]]:
     # The NGData platform-rest-prod.ngdata.no API no longer responds to this
     # route — all requests return 404. Disabled until a working endpoint is found.
     log.warning("meny_disabled", reason="NGData API endpoint deprecated", eans=len(eans))
