@@ -1,9 +1,13 @@
 name: Daily Light Maintenance
 
 on:
-  schedule:
-    - cron: '0 3 * * *'   # Kjører kl 03:00 UTC hver dag
   workflow_dispatch:        # Kan også kjøres manuelt
+
+# DISABLED: Schedule temporarily disabled due to missing OPENROUTER_API_KEY secret
+# on:
+#   schedule:
+#     - cron: '0 3 * * *'   # Kjører kl 03:00 UTC hver dag
+#   workflow_dispatch:        # Kan også kjøres manuelt
 
 permissions:
   contents: write
