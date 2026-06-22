@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,9 +12,10 @@ class Settings(BaseSettings):
 
     # Request tuning
     request_timeout: float = 15.0
-    max_concurrency: int = 2   # Kassal free tier: 60 req/min; 2 concurrent + 1.5s sleep ≈ 40 req/min
+    # Kassal free tier: 60 req/min; 2 concurrent + 1.5s sleep ≈ 40 req/min
+    max_concurrency: int = 2
     retry_attempts: int = 3
     retry_wait_seconds: float = 2.0
 
 
-settings = Settings()  # type: ignore[call-arg]
+settings: Settings = Settings()
