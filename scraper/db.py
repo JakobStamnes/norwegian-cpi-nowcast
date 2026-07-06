@@ -1,6 +1,8 @@
 """Async database helpers using asyncpg directly for bulk inserts."""
 from __future__ import annotations
 
+from typing import Any
+
 import asyncpg
 
 from scraper.config import settings
@@ -22,7 +24,7 @@ async def close_pool() -> None:
         _pool = None
 
 
-async def fetch_active_products() -> list[dict]:
+async def fetch_active_products() -> list[dict[str, Any]]:
     pool = await get_pool()
     rows = await pool.fetch("SELECT ean, name, base_price_p0 FROM products WHERE active = TRUE")
     return [dict(r) for r in rows]
@@ -42,7 +44,7 @@ async def update_ean(old_ean: str, new_ean: str, base_price: float) -> None:
     )
 
 
-async def upsert_prices(records: list[dict]) -> int:
+async def upsert_prices(records: list[dict[str, Any]]) -> int:
     """Bulk-insert price rows; skips duplicates via ON CONFLICT DO NOTHING."""
     if not records:
         return 0
