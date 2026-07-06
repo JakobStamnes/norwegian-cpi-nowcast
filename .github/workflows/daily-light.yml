@@ -72,6 +72,15 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           REPO_NAME: ${{ github.repository }}
         run: |
+          # Skip if API key is not configured
+          if [ -z "$OPENROUTER_API_KEY" ]; then
+            echo "OPENROUTER_API_KEY not configured, skipping AI maintenance"
+            echo "AI_CONTENT<<EOF" >> $GITHUB_OUTPUT
+            echo '{"changes": [], "summary": "AI maintenance skipped — OPENROUTER_API_KEY not configured"}' >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           PROMPT="Du er en senior utvikler som vedlikeholder GitHub-repoet '$REPO_NAME'.
 
           ## Filer i repoet:
