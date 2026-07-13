@@ -15,7 +15,7 @@ from datetime import date
 from typing import Any, Literal
 
 import structlog
-from curl_cffi.requests import AsyncSession  # type: ignore[import-not-found]
+from curl_cffi.requests import AsyncSession
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from scraper.config import settings
