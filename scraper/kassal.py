@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date
+from typing import Any
 
 import httpx
 import structlog
@@ -30,7 +31,7 @@ HEADERS = {
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
 )
-async def _search(client: httpx.AsyncClient, query: str) -> list[dict]:
+async def _search(client: httpx.AsyncClient, query: str) -> list[dict[str, Any]]:
     resp = await client.get(
         f"{BASE}/products",
         params={"search": query, "size": 5},
@@ -41,18 +42,18 @@ async def _search(client: httpx.AsyncClient, query: str) -> list[dict]:
     return resp.json().get("data", [])
 
 
-async def fetch_prices_batch(products: list[dict]) -> list[dict]:
+async def fetch_prices_batch(products: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Fetch prices for a list of {ean, name} dicts via name search.
 
     Returns price rows keyed by the canonical EAN from our DB.
     Also returns a list of (old_ean, real_ean, base_price) corrections.
     """
     today = date.today()
-    results: list[dict] = []
+    results: list[dict[str, Any]] = []
     ean_corrections: list[tuple[str, str, float]] = []
     sem = asyncio.Semaphore(settings.max_concurrency)
 
-    async def fetch_one(client: httpx.AsyncClient, product: dict) -> None:
+    async def fetch_one(client: httpx.AsyncClient, product: dict[str, Any]) -> None:
         db_ean: str = product["ean"]
         name: str = product["name"]
         async with sem:

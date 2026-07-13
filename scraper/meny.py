@@ -6,8 +6,10 @@ Endpoint: https://platform-rest-prod.ngdata.no/api/products/10800/<store_id>/sea
 """
 from __future__ import annotations
 
+from typing import Any
+
 import structlog
-from curl_cffi.requests import AsyncSession
+from curl_cffi.requests import AsyncSession  # type: ignore[no-redef]
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from scraper.config import settings
@@ -31,7 +33,7 @@ _HEADERS = {
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
 )
-async def _post_search(session: AsyncSession, ean: str) -> list[dict]:
+async def _post_search(session: AsyncSession, ean: str) -> list[dict[str, Any]]:  # type: ignore[name-defined]
     payload = {
         "query": ean,
         "size": 5,
@@ -47,7 +49,7 @@ async def _post_search(session: AsyncSession, ean: str) -> list[dict]:
     return resp.json().get("hits", {}).get("hits", [])
 
 
-async def fetch_prices_batch(eans: list[str]) -> list[dict]:
+async def fetch_prices_batch(eans: list[str]) -> list[dict[str, Any]]:
     # The NGData platform-rest-prod.ngdata.no API no longer responds to this
     # route — all requests return 404. Disabled until a working endpoint is found.
     log.warning("meny_disabled", reason="NGData API endpoint deprecated", eans=len(eans))
