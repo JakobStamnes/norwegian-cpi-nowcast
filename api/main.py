@@ -1,6 +1,7 @@
 """FastAPI backend — serves data to the dashboard frontend."""
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import date
 
@@ -15,7 +16,7 @@ _pool: asyncpg.Pool | None = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     global _pool
     _pool = await asyncpg.create_pool(settings.database_url)
     yield
@@ -76,9 +77,9 @@ async def get_daily_index(
     coicop_code: str | None = Query(None),
     from_date: date = Query(default=date(2026, 1, 1)),
     to_date: date = Query(default_factory=date.today),
-):
+) -> list[DailyIndexPoint]:
     where = "WHERE price_date BETWEEN $1 AND $2"
-    params: list = [from_date, to_date]
+    params: list[date | str] = [from_date, to_date]
     if coicop_code:
         where += " AND coicop_code = $3"
         params.append(coicop_code)
@@ -87,34 +88,34 @@ async def get_daily_index(
         "ORDER BY price_date DESC",
         *params,
     )
-    return [dict(r) for r in rows]
+    return [DailyIndexPoint(**dict(r)) for r in rows]
 
 
 @app.get("/nowcast/latest", response_model=NowcastResponse)
-async def get_latest_nowcast():
+async def get_latest_nowcast() -> NowcastResponse:
     row = await db().fetchrow(
         "SELECT run_date, target_month, point_estimate, ci_lower_95, ci_upper_95,"
         " model_version AS xgb_version FROM nowcast ORDER BY run_date DESC LIMIT 1"
     )
     if not row:
         raise HTTPException(404, "No nowcast available yet")
-    return dict(row)
+    return NowcastResponse(**dict(row))
 
 
 @app.get("/ssb", response_model=list[SSBPoint])
 async def get_ssb_history(
     from_date: date = Query(default=date(2024, 1, 1)),
-):
+) -> list[SSBPoint]:
     rows = await db().fetch(
         "SELECT reference_month, mom_pct, yoy_pct FROM ssb_official "
         "WHERE reference_month >= $1 ORDER BY reference_month",
         from_date,
     )
-    return [dict(r) for r in rows]
+    return [SSBPoint(**dict(r)) for r in rows]
 
 
 @app.get("/breakdown/{price_date}", response_model=list[CoicopBreakdown])
-async def get_coicop_breakdown(price_date: date):
+async def get_coicop_breakdown(price_date: date) -> list[CoicopBreakdown]:
     rows = await db().fetch(
         "SELECT coicop_code, index_value, mom_pct, n_products FROM daily_index "
         "WHERE price_date = $1 ORDER BY coicop_code",
@@ -122,13 +123,13 @@ async def get_coicop_breakdown(price_date: date):
     )
     if not rows:
         raise HTTPException(404, f"No index data for {price_date}")
-    return [dict(r) for r in rows]
+    return [CoicopBreakdown(**dict(r)) for r in rows]
 
 
 @app.get("/nowcast/history", response_model=list[NowcastResponse])
 async def get_nowcast_history(
     from_date: date = Query(default=date(2020, 1, 1)),
-):
+) -> list[NowcastResponse]:
     """All historical nowcast predictions (backfill + live), one per target month."""
     rows = await db().fetch(
         """
@@ -141,10 +142,10 @@ async def get_nowcast_history(
         """,
         from_date,
     )
-    return [dict(r) for r in rows]
+    return [NowcastResponse(**dict(r)) for r in rows]
 
 
 @app.get("/health")
-async def health():
+async def health() -> dict[str, str]:
     await db().fetchval("SELECT 1")
     return {"status": "ok"}

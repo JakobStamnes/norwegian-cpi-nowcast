@@ -6,6 +6,8 @@ Endpoint: https://platform-rest-prod.ngdata.no/api/products/10800/<store_id>/sea
 """
 from __future__ import annotations
 
+from typing import Any, Literal
+
 import structlog
 from curl_cffi.requests import AsyncSession
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -17,7 +19,7 @@ log = structlog.get_logger(__name__)
 # Default store ID — Meny Byporten Oslo; representative urban pricing
 _DEFAULT_STORE_ID = "7080001150886"
 MENY_API = f"https://platform-rest-prod.ngdata.no/api/products/10800/{_DEFAULT_STORE_ID}/search"
-_IMPERSONATE = "chrome120"
+_IMPERSONATE: Literal["chrome120"] = "chrome120"
 
 _HEADERS = {
     "Accept": "application/json",
@@ -31,7 +33,7 @@ _HEADERS = {
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
 )
-async def _post_search(session: AsyncSession, ean: str) -> list[dict]:
+async def _post_search(session: AsyncSession, ean: str) -> list[dict[str, Any]]:  # type: ignore[type-arg]
     payload = {
         "query": ean,
         "size": 5,
@@ -44,10 +46,11 @@ async def _post_search(session: AsyncSession, ean: str) -> list[dict]:
         timeout=settings.request_timeout,
     )
     resp.raise_for_status()
-    return resp.json().get("hits", {}).get("hits", [])
+    data: list[dict[str, Any]] = resp.json().get("hits", {}).get("hits", [])
+    return data
 
 
-async def fetch_prices_batch(eans: list[str]) -> list[dict]:
+async def fetch_prices_batch(eans: list[str]) -> list[dict[str, Any]]:
     # The NGData platform-rest-prod.ngdata.no API no longer responds to this
     # route — all requests return 404. Disabled until a working endpoint is found.
     log.warning("meny_disabled", reason="NGData API endpoint deprecated", eans=len(eans))

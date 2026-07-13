@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date
+from typing import Any, Literal
 
 import structlog
 from curl_cffi.requests import AsyncSession
@@ -22,7 +23,7 @@ from scraper.config import settings
 log = structlog.get_logger(__name__)
 
 ODA_SEARCH_API = "https://oda.com/api/v1/search/"
-_IMPERSONATE = "chrome120"
+_IMPERSONATE: Literal["chrome120"] = "chrome120"
 
 _HEADERS = {
     "Accept": "application/json",
@@ -36,7 +37,7 @@ _HEADERS = {
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
 )
-async def _search_oda(session: AsyncSession, name: str) -> list[dict]:
+async def _search_oda(session: AsyncSession, name: str) -> list[dict[str, Any]]:  # type: ignore[type-arg]
     resp = await session.get(
         ODA_SEARCH_API,
         params={"q": name, "page_size": 5},
@@ -46,19 +47,20 @@ async def _search_oda(session: AsyncSession, name: str) -> list[dict]:
     if resp.status_code == 404:
         return []
     resp.raise_for_status()
-    return resp.json().get("products", [])
+    data: list[dict[str, Any]] = resp.json().get("products", [])
+    return data
 
 
-async def fetch_prices_batch(products: list[dict]) -> list[dict]:
+async def fetch_prices_batch(products: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Name-based search fallback. Returns price rows keyed by our db EAN.
 
     Accepts the same {ean, name} dict list as the Kassal scraper.
     """
     today = date.today()
-    results: list[dict] = []
+    results: list[dict[str, Any]] = []
     sem = asyncio.Semaphore(settings.max_concurrency)
 
-    async def fetch_one(session: AsyncSession, product: dict) -> None:
+    async def fetch_one(session: AsyncSession, product: dict[str, Any]) -> None:  # type: ignore[type-arg]
         db_ean: str = product["ean"]
         name: str = product["name"]
         base_price: float | None = product.get("base_price_p0")
@@ -88,7 +90,11 @@ async def fetch_prices_batch(products: list[dict]) -> list[dict]:
                         "price_date": today,
                         "price": price,
                         "is_promo": bool(discount),
-                        "promo_price": float(discount["price"]) if discount and "price" in discount else None,
+                        "promo_price": (
+                            float(discount["price"])
+                            if discount and "price" in discount
+                            else None
+                        ),
                         "source": "oda_api",
                     }
                 )
