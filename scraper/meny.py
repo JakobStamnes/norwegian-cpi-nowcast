@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any, Literal
 
 import structlog
-from curl_cffi.requests import AsyncSession  # type: ignore[attr-defined]
+from curl_cffi.requests import AsyncSession  # type: ignore[import-not-found]
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from scraper.config import settings
@@ -33,7 +33,7 @@ _HEADERS = {
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
 )
-async def _post_search(session: AsyncSession, ean: str) -> list[dict[str, Any]]:
+async def _post_search(session: AsyncSession, ean: str) -> list[dict[str, Any]]:  # type: ignore[type-arg]
     payload = {
         "query": ean,
         "size": 5,
