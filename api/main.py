@@ -88,7 +88,7 @@ async def get_daily_index(
         "ORDER BY price_date DESC",
         *params,
     )
-    return [dict(r) for r in rows]
+    return [DailyIndexPoint(**dict(r)) for r in rows]
 
 
 @app.get("/nowcast/latest", response_model=NowcastResponse)
@@ -99,7 +99,7 @@ async def get_latest_nowcast() -> NowcastResponse:
     )
     if not row:
         raise HTTPException(404, "No nowcast available yet")
-    return dict(row)
+    return NowcastResponse(**dict(row))
 
 
 @app.get("/ssb", response_model=list[SSBPoint])
@@ -111,7 +111,7 @@ async def get_ssb_history(
         "WHERE reference_month >= $1 ORDER BY reference_month",
         from_date,
     )
-    return [dict(r) for r in rows]
+    return [SSBPoint(**dict(r)) for r in rows]
 
 
 @app.get("/breakdown/{price_date}", response_model=list[CoicopBreakdown])
@@ -123,7 +123,7 @@ async def get_coicop_breakdown(price_date: date) -> list[CoicopBreakdown]:
     )
     if not rows:
         raise HTTPException(404, f"No index data for {price_date}")
-    return [dict(r) for r in rows]
+    return [CoicopBreakdown(**dict(r)) for r in rows]
 
 
 @app.get("/nowcast/history", response_model=list[NowcastResponse])
@@ -142,7 +142,7 @@ async def get_nowcast_history(
         """,
         from_date,
     )
-    return [dict(r) for r in rows]
+    return [NowcastResponse(**dict(r)) for r in rows]
 
 
 @app.get("/health")
