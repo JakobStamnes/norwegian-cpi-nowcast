@@ -122,7 +122,13 @@ else:
 # Going backwards: index_{M-1} = index_M / (1 + mom_M/100)
 ssb_chained = pd.DataFrame()
 if not ssb_df.empty:
-    chain = ssb_df[["reference_month", "mom_pct"]].dropna().sort_values("reference_month").reset_index(drop=True).copy()
+    chain = (
+        ssb_df[["reference_month", "mom_pct"]]
+        .dropna()
+        .sort_values("reference_month")
+        .reset_index(drop=True)
+        .copy()
+    )
     # Anchor value: mean of our real daily observations (or 100 if none yet)
     anchor_val = float(agg_daily["index_value"].mean()) if not agg_daily.empty else 100.0
     anchor_ts = (
@@ -136,10 +142,16 @@ if not ssb_df.empty:
         chain.at[ap, "index_val"] = anchor_val
         # Forward chain
         for i in range(ap + 1, len(chain)):
-            chain.at[i, "index_val"] = chain.at[i - 1, "index_val"] * (1 + chain.at[i, "mom_pct"] / 100)
+            chain.at[i, "index_val"] = (
+                chain.at[i - 1, "index_val"]
+                * (1 + chain.at[i, "mom_pct"] / 100)
+            )
         # Backward chain
         for i in range(ap - 1, -1, -1):
-            chain.at[i, "index_val"] = chain.at[i + 1, "index_val"] / (1 + chain.at[i + 1, "mom_pct"] / 100)
+            chain.at[i, "index_val"] = (
+                chain.at[i + 1, "index_val"]
+                / (1 + chain.at[i + 1, "mom_pct"] / 100)
+            )
         ssb_chained = chain[["reference_month", "index_val"]].dropna()
 
 
@@ -286,8 +298,16 @@ if not nowcast_history_df.empty and not ssb_df.empty:
         naive_mae = merged["actual_mom"].diff().abs().mean()
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("Nowcast MAE", f"{mae:.2f} pp", help="Mean Absolute Error vs SSB actuals")
-        col2.metric("Naive MAE (persist)", f"{naive_mae:.2f} pp", help="Benchmark: repeat last month's print")
+        col1.metric(
+            "Nowcast MAE",
+            f"{mae:.2f} pp",
+            help="Mean Absolute Error vs SSB actuals",
+        )
+        col2.metric(
+            "Naive MAE (persist)",
+            f"{naive_mae:.2f} pp",
+            help="Benchmark: repeat last month's print",
+        )
         col3.metric("Months tracked", f"{len(merged)}")
 
         fig_hist = go.Figure()
@@ -362,10 +382,18 @@ if not breakdown_df.empty:
         # No MoM yet (< 30 days of history) — show absolute index vs Jan 2026 base
         plot_col = "index_value"
         x_title = "Index (Jan 2026 = 100)"
-        bar_label = breakdown_df["index_value"].apply(lambda v: f"{v:.1f}" if pd.notna(v) else "N/A")
-        bar_colors = ["#DC2626" if v > 100 else "#16A34A" for v in breakdown_df["index_value"].fillna(100)]
+        bar_label = breakdown_df["index_value"].apply(
+            lambda v: f"{v:.1f}" if pd.notna(v) else "N/A"
+        )
+        bar_colors = [
+            "#DC2626" if v > 100 else "#16A34A"
+            for v in breakdown_df["index_value"].fillna(100)
+        ]
         breakdown_df = breakdown_df.sort_values("index_value", ascending=True)
-        st.caption("ℹ️ MoM % will appear once 30 days of price history are collected. Showing index level vs January 2026 base (100) for now.")
+        st.caption(
+            "ℹ️ MoM % will appear once 30 days of price history are collected. "
+            "Showing index level vs January 2026 base (100) for now."
+        )
 
     fig3 = go.Figure(
         go.Bar(

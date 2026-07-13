@@ -101,7 +101,10 @@ async def run(target_month: date | None = None) -> None:
 
     await pool.execute(
         """
-        INSERT INTO nowcast (run_date, target_month, point_estimate, ci_lower_95, ci_upper_95, model_version, features_json)
+        INSERT INTO nowcast (
+            run_date, target_month, point_estimate, ci_lower_95,
+            ci_upper_95, model_version, features_json
+        )
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (run_date) DO UPDATE SET
             point_estimate = EXCLUDED.point_estimate,
@@ -115,7 +118,13 @@ async def run(target_month: date | None = None) -> None:
         ci_lo,
         ci_hi,
         MODEL_PATH.stem,
-        json.dumps({k: (None if isinstance(v, float) and v != v else v) for k, v in feat.items()}, default=str),
+        json.dumps(
+            {
+                k: (None if isinstance(v, float) and v != v else v)
+                for k, v in feat.items()
+            },
+            default=str,
+        ),
     )
     await pool.close()
 
