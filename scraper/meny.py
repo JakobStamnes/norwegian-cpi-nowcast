@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 import structlog
-from curl_cffi.requests import AsyncSession  # type: ignore[no-redef]
+from curl_cffi.requests import AsyncSession  # type: ignore[attr-defined]
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from scraper.config import settings
@@ -33,7 +33,7 @@ _HEADERS = {
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
 )
-async def _post_search(session: AsyncSession, ean: str) -> list[dict[str, Any]]:  # type: ignore[name-defined]
+async def _post_search(session: AsyncSession, ean: str) -> list[dict[str, Any]]:  # type: ignore[type-arg]
     payload = {
         "query": ean,
         "size": 5,
@@ -46,7 +46,8 @@ async def _post_search(session: AsyncSession, ean: str) -> list[dict[str, Any]]:
         timeout=settings.request_timeout,
     )
     resp.raise_for_status()
-    return resp.json().get("hits", {}).get("hits", [])
+    data: list[dict[str, Any]] = resp.json().get("hits", {}).get("hits", [])
+    return data
 
 
 async def fetch_prices_batch(eans: list[str]) -> list[dict[str, Any]]:

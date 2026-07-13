@@ -39,7 +39,8 @@ async def _search(client: httpx.AsyncClient, query: str) -> list[dict[str, Any]]
         timeout=settings.request_timeout,
     )
     resp.raise_for_status()
-    return resp.json().get("data", [])
+    data: list[dict[str, Any]] = resp.json().get("data", [])
+    return data
 
 
 async def fetch_prices_batch(products: list[dict[str, Any]]) -> list[dict[str, Any]]:

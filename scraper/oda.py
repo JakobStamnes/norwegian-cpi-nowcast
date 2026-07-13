@@ -15,7 +15,7 @@ from datetime import date
 from typing import Any
 
 import structlog
-from curl_cffi.requests import AsyncSession  # type: ignore[no-redef]
+from curl_cffi.requests import AsyncSession  # type: ignore[attr-defined]
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from scraper.config import settings
@@ -37,7 +37,7 @@ _HEADERS = {
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
 )
-async def _search_oda(session: AsyncSession, name: str) -> list[dict[str, Any]]:  # type: ignore[name-defined]
+async def _search_oda(session: AsyncSession, name: str) -> list[dict[str, Any]]:  # type: ignore[type-arg]
     resp = await session.get(
         ODA_SEARCH_API,
         params={"q": name, "page_size": 5},
@@ -47,7 +47,8 @@ async def _search_oda(session: AsyncSession, name: str) -> list[dict[str, Any]]:
     if resp.status_code == 404:
         return []
     resp.raise_for_status()
-    return resp.json().get("products", [])
+    data: list[dict[str, Any]] = resp.json().get("products", [])
+    return data
 
 
 async def fetch_prices_batch(products: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -59,7 +60,7 @@ async def fetch_prices_batch(products: list[dict[str, Any]]) -> list[dict[str, A
     results: list[dict[str, Any]] = []
     sem = asyncio.Semaphore(settings.max_concurrency)
 
-    async def fetch_one(session: AsyncSession, product: dict[str, Any]) -> None:  # type: ignore[name-defined]
+    async def fetch_one(session: AsyncSession, product: dict[str, Any]) -> None:  # type: ignore[type-arg]
         db_ean: str = product["ean"]
         name: str = product["name"]
         base_price: float | None = product.get("base_price_p0")
