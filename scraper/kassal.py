@@ -43,7 +43,9 @@ async def _search(client: httpx.AsyncClient, query: str) -> list[dict[str, Any]]
     return data
 
 
-async def fetch_prices_batch(products: list[dict[str, Any]]) -> list[dict[str, Any]]:
+async def fetch_prices_batch(
+    products: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[tuple[str, str, float]]]:
     """Fetch prices for a list of {ean, name} dicts via name search.
 
     Returns price rows keyed by the canonical EAN from our DB.
@@ -110,4 +112,4 @@ async def fetch_prices_batch(products: list[dict[str, Any]]) -> list[dict[str, A
         requested=len(products),
         ean_corrections=len(ean_corrections),
     )
-    return results, ean_corrections  # type: ignore[return-value]
+    return results, ean_corrections

@@ -6,7 +6,7 @@ Endpoint: https://platform-rest-prod.ngdata.no/api/products/10800/<store_id>/sea
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 import structlog
 from curl_cffi.requests import AsyncSession  # type: ignore[attr-defined]
@@ -19,7 +19,7 @@ log = structlog.get_logger(__name__)
 # Default store ID — Meny Byporten Oslo; representative urban pricing
 _DEFAULT_STORE_ID = "7080001150886"
 MENY_API = f"https://platform-rest-prod.ngdata.no/api/products/10800/{_DEFAULT_STORE_ID}/search"
-_IMPERSONATE = "chrome120"
+_IMPERSONATE: Literal["chrome120"] = "chrome120"
 
 _HEADERS = {
     "Accept": "application/json",
@@ -33,7 +33,7 @@ _HEADERS = {
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
 )
-async def _post_search(session: AsyncSession, ean: str) -> list[dict[str, Any]]:  # type: ignore[type-arg]
+async def _post_search(session: AsyncSession, ean: str) -> list[dict[str, Any]]:
     payload = {
         "query": ean,
         "size": 5,
