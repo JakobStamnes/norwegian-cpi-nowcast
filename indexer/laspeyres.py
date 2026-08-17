@@ -124,14 +124,18 @@ async def compute_and_store(pool: asyncpg.Pool, price_date: date) -> None:
     grp["is_jul_window"] = month in (6, 7)
 
     # MoM: compare to same COICOP group 30 days ago
-    prev_rows = await pool.fetch(
-        "SELECT coicop_code, index_value FROM daily_index WHERE price_date = ($1::date - INTERVAL '30 days')",
-        price_date,
+    query = (
+        "SELECT coicop_code, index_value FROM daily_index "
+        "WHERE price_date = ($1::date - INTERVAL '30 days')"
     )
+    prev_rows = await pool.fetch(query, price_date)
     if prev_rows:
         prev_df = pd.DataFrame([dict(r) for r in prev_rows])
-        grp = grp.merge(prev_df.rename(columns={"index_value": "prev_index"}), on="coicop_code", how="left")
-        grp["mom_pct"] = (grp["index_value"] - grp["prev_index"]) / grp["prev_index"] * 100
+        prev_renamed = prev_df.rename(columns={"index_value": "prev_index"})
+        grp = grp.merge(prev_renamed, on="coicop_code", how="left")
+        grp["mom_pct"] = (
+            (grp["index_value"] - grp["prev_index"]) / grp["prev_index"] * 100
+        )
     else:
         grp["mom_pct"] = None
 
