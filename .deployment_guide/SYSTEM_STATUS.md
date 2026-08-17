@@ -1,7 +1,7 @@
 # Norwegian CPI Nowcast - System Status Report
 
-**Last Updated:** 2026-05-04  
-**Status:** ✅ **OPERATIONAL** (with deployment configuration needed)
+**Last Updated:** 2026-08-17  
+**Status:** ✅ **OPERATIONAL** (linting fixed, requires API deployment to bring dashboard online)
 
 ## Executive Summary
 
@@ -42,21 +42,32 @@ Nowcast predictions (nowcast table)
 
 ## Code Quality Status
 
-### ✅ Linting & Type Checking
-- **Fixed Issues:**
+### ✅ Linting & Type Checking (2026-08-17 Update)
+- **Fixed Issues (Previous):**
   - Fixed `daily-light.yml` workflow pushing to wrong branch (`main` → `master`)
   - Removed unused imports (numpy, json, asyncio, date)
   - Fixed type annotations (imported `date` at module level in laspeyres.py)
   - All 5 unit tests pass (promo filter)
 
+- **Fixed Issues (2026-08-17):**
+  - ✅ Fixed all 16 E501 (line too long) warnings:
+    - frontend/app.py (chain operations, metric helpers)
+    - model/predict.py (INSERT query formatting)
+    - indexer/laspeyres.py (query and merge operations)
+    - scraper/config.py (comment placement)
+    - scraper/kassal.py (sleep comment)
+    - scraper/oda.py (promo_price calculation)
+    - tests/test_promo_filter.py (test row creation)
+  - ✅ Removed unused type: ignore comment in scraper/config.py
+  - **Ruff linter:** All checks passing ✅
+  - **Pytest:** All 5 tests passing ✅
+
 - **Remaining Issues:**
-  - 16 E501 (line too long) warnings in:
-    - frontend/app.py (data processing chains)
-    - model/predict.py (INSERT query)
-    - indexer/laspeyres.py (query)
-    - scraper/kassal.py & oda.py (comments)
-    - tests/test_promo_filter.py (test data)
-  - **Severity:** Low (code is functional; readability over 100 chars)
+  - 40 mypy type checking warnings (pre-existing):
+    - Missing type parameters for generic types (dict, list)
+    - Missing function return type annotations
+    - Untyped decorators
+  - **Severity:** Low (existing code patterns; not blocking CI)
 
 ### ✅ Tests
 - Unit tests: **5/5 passing** (`test_promo_filter.py`)
@@ -208,8 +219,19 @@ Backtested on **551 months** of SSB data (1979–2025) using 5-fold time-series 
 
 ---
 
-## Recent Fixes (2026-05-04)
+## Recent Fixes
 
+### 2026-08-17 (Current Run)
+1. **Linting Refactor:** Fixed all 16 E501 (line too long) violations:
+   - Split long chains and method calls across lines
+   - Moved comments to separate lines
+   - Extracted intermediate variables for readability
+   - Reformatted test data row creation
+2. **Type Checker:** Removed unused type: ignore comment in `scraper/config.py`
+3. **Quality:** All ruff checks passing, all pytest tests passing
+4. **Status Report:** Updated system documentation to reflect current state
+
+### 2026-05-04
 1. **Workflow Bug:** `daily-light.yml` was pushing to non-existent `main` branch → Fixed to `master`
 2. **Type Annotations:** Fixed quoted type hints in `laspeyres.py` and `features.py`
 3. **Unused Imports:** Cleaned up unnecessary imports in:
@@ -217,23 +239,26 @@ Backtested on **551 months** of SSB data (1979–2025) using 5-fold time-series 
    - `scraper/meny.py` (asyncio, date)
    - `model/features.py` (date)
    - `tests/test_promo_filter.py` (modal_smooth)
-4. **Linting:** All imports and type checks now pass; 16 E501 (long line) warnings remain but are cosmetic
+4. **Linting:** Fixed imports and type checks
 
 ---
 
 ## Next Steps
 
-### Immediate (1–2 hours)
-1. ✅ Commit fixes to master
-2. ✅ Verify tests pass
-3. Deploy API to Render/Railway/Fly
-4. Add `API_URL` secret to Streamlit Cloud
-5. Verify dashboard is online
+### Immediate (to restore dashboard)
+1. ✅ Linting fixed and committed to `claude/determined-carson-39ev67` branch
+2. Deploy API to Render/Railway/Fly.io:
+   - Use provided deployment guide (Section: Deployment Checklist)
+   - Get API URL (e.g., `https://norwegian-cpi-api.onrender.com`)
+3. Add `API_URL` secret to Streamlit Cloud:
+   - Go to https://share.streamlit.io → App settings → Secrets
+   - Add: `API_URL = "https://your-api-url.onrender.com"`
+4. Verify dashboard comes online
 
-### Short-term (optional)
-- Fix remaining E501 line-too-long warnings
+### Short-term (optional enhancements)
 - Add integration tests (requires PostgreSQL test database)
-- Set up CI to run on pull requests automatically
+- Set up CI to run on pull requests automatically (test on each PR)
+- Monitor GitHub Actions workflows for failures
 
 ### Medium-term
 - Accumulate 12+ months of daily price data (currently ~4 months)
