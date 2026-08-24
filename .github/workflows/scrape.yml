@@ -32,6 +32,7 @@ jobs:
       - name: Compute daily index
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          KASSAL_API_KEY: ${{ secrets.KASSAL_API_KEY }}
         run: python -m indexer.run_daily
 
   nowcast:
