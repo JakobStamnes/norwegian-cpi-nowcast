@@ -362,10 +362,19 @@ if not breakdown_df.empty:
         # No MoM yet (< 30 days of history) — show absolute index vs Jan 2026 base
         plot_col = "index_value"
         x_title = "Index (Jan 2026 = 100)"
-        bar_label = breakdown_df["index_value"].apply(lambda v: f"{v:.1f}" if pd.notna(v) else "N/A")
-        bar_colors = ["#DC2626" if v > 100 else "#16A34A" for v in breakdown_df["index_value"].fillna(100)]
+        bar_label = breakdown_df["index_value"].apply(
+            lambda v: f"{v:.1f}" if pd.notna(v) else "N/A"
+        )
+        bar_colors = [
+            "#DC2626" if v > 100 else "#16A34A"
+            for v in breakdown_df["index_value"].fillna(100)
+        ]
         breakdown_df = breakdown_df.sort_values("index_value", ascending=True)
-        st.caption("ℹ️ MoM % will appear once 30 days of price history are collected. Showing index level vs January 2026 base (100) for now.")
+        caption_text = (
+            "ℹ️ MoM % will appear once 30 days of price history are collected. "
+            "Showing index level vs January 2026 base (100) for now."
+        )
+        st.caption(caption_text)
 
     fig3 = go.Figure(
         go.Bar(
