@@ -16,6 +16,7 @@ import sys
 import structlog
 
 from scraper import kassal, meny, oda
+from scraper.config import settings
 from scraper.db import close_pool, fetch_active_products, update_ean, upsert_prices
 
 log = structlog.get_logger(__name__)
@@ -29,6 +30,13 @@ async def run() -> None:
             structlog.processors.KeyValueRenderer(key_order=["event"]),
         ],
     )
+
+    if not settings.kassal_api_key:
+        log.error(
+            "scraper_abort",
+            reason="KASSAL_API_KEY environment variable not set",
+        )
+        sys.exit(1)
 
     log.info("scraper_start")
     products = await fetch_active_products()

@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -5,7 +6,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     database_url: str
-    kassal_api_key: str
+    kassal_api_key: str | None = Field(default=None)
     kassal_base_url: str = "https://kassal.app/api/v1"
 
     # Request tuning
