@@ -82,13 +82,18 @@ async def fetch_prices_batch(products: list[dict]) -> list[dict]:
                     )
                     return
                 discount = hit.get("discount") or hit.get("promotion")
+                promo_price = (
+                    float(discount["price"])
+                    if discount and "price" in discount
+                    else None
+                )
                 results.append(
                     {
                         "ean": db_ean,
                         "price_date": today,
                         "price": price,
                         "is_promo": bool(discount),
-                        "promo_price": float(discount["price"]) if discount and "price" in discount else None,
+                        "promo_price": promo_price,
                         "source": "oda_api",
                     }
                 )
