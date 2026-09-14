@@ -56,7 +56,8 @@ async def fetch_prices_batch(products: list[dict]) -> list[dict]:
         db_ean: str = product["ean"]
         name: str = product["name"]
         async with sem:
-            await asyncio.sleep(1.5)  # 2 slots / (1.5s sleep + ~1s request) ≈ 40 req/min, under 60/min limit
+            # Rate limit: 60 req/min, 2 concurrent + 1.5s sleep ≈ 40 req/min
+            await asyncio.sleep(1.5)
             try:
                 hits = await _search(client, name)
                 if not hits:

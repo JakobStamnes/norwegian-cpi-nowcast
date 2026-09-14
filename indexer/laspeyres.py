@@ -130,7 +130,8 @@ async def compute_and_store(pool: asyncpg.Pool, price_date: date) -> None:
     )
     if prev_rows:
         prev_df = pd.DataFrame([dict(r) for r in prev_rows])
-        grp = grp.merge(prev_df.rename(columns={"index_value": "prev_index"}), on="coicop_code", how="left")
+        prev_df_renamed = prev_df.rename(columns={"index_value": "prev_index"})
+        grp = grp.merge(prev_df_renamed, on="coicop_code", how="left")
         grp["mom_pct"] = (grp["index_value"] - grp["prev_index"]) / grp["prev_index"] * 100
     else:
         grp["mom_pct"] = None
