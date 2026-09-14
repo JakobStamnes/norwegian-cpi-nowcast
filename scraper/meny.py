@@ -6,7 +6,7 @@ Endpoint: https://platform-rest-prod.ngdata.no/api/products/10800/<store_id>/sea
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import structlog
 from curl_cffi.requests import AsyncSession
@@ -28,7 +28,7 @@ _HEADERS = {
 }
 
 
-@retry(
+@retry(  # type: ignore[untyped-decorator]
     stop=stop_after_attempt(settings.retry_attempts),
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
@@ -46,7 +46,7 @@ async def _post_search(session: AsyncSession, ean: str) -> list[dict[str, Any]]:
         timeout=settings.request_timeout,
     )
     resp.raise_for_status()
-    return resp.json().get("hits", {}).get("hits", [])
+    return cast(list[dict[str, Any]], resp.json().get("hits", {}).get("hits", []))
 
 
 async def fetch_prices_batch(eans: list[str]) -> list[dict[str, Any]]:

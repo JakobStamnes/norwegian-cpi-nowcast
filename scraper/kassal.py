@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import structlog
@@ -26,7 +26,7 @@ HEADERS = {
 }
 
 
-@retry(
+@retry(  # type: ignore[untyped-decorator]
     stop=stop_after_attempt(settings.retry_attempts),
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
@@ -39,7 +39,7 @@ async def _search(client: httpx.AsyncClient, query: str) -> list[dict[str, Any]]
         timeout=settings.request_timeout,
     )
     resp.raise_for_status()
-    return resp.json().get("data", [])
+    return cast(list[dict[str, Any]], resp.json().get("data", []))
 
 
 async def fetch_prices_batch(

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date
-from typing import Any
+from typing import Any, cast
 
 import structlog
 from curl_cffi.requests import AsyncSession
@@ -32,7 +32,7 @@ _HEADERS = {
 }
 
 
-@retry(
+@retry(  # type: ignore[untyped-decorator]
     stop=stop_after_attempt(settings.retry_attempts),
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
@@ -47,7 +47,7 @@ async def _search_oda(session: AsyncSession, name: str) -> list[dict[str, Any]]:
     if resp.status_code == 404:
         return []
     resp.raise_for_status()
-    return resp.json().get("products", [])
+    return cast(list[dict[str, Any]], resp.json().get("products", []))
 
 
 async def fetch_prices_batch(products: list[dict[str, Any]]) -> list[dict[str, Any]]:

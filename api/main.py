@@ -16,7 +16,7 @@ _pool: asyncpg.Pool | None = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> Any:  # type: ignore[return]
+async def lifespan(app: FastAPI) -> Any:
     global _pool
     _pool = await asyncpg.create_pool(settings.database_url)
     yield
@@ -72,7 +72,7 @@ class CoicopBreakdown(BaseModel):  # type: ignore[misc]
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
-@app.get("/index", response_model=list[DailyIndexPoint])
+@app.get("/index", response_model=list[DailyIndexPoint])  # type: ignore[untyped-decorator]
 async def get_daily_index(
     coicop_code: str | None = Query(None),
     from_date: date = Query(default=date(2026, 1, 1)),
@@ -91,7 +91,7 @@ async def get_daily_index(
     return [dict(r) for r in rows]
 
 
-@app.get("/nowcast/latest", response_model=NowcastResponse)
+@app.get("/nowcast/latest", response_model=NowcastResponse)  # type: ignore[untyped-decorator]
 async def get_latest_nowcast() -> dict[str, Any]:
     row = await db().fetchrow(
         "SELECT run_date, target_month, point_estimate, ci_lower_95, ci_upper_95,"
@@ -102,7 +102,7 @@ async def get_latest_nowcast() -> dict[str, Any]:
     return dict(row)
 
 
-@app.get("/ssb", response_model=list[SSBPoint])
+@app.get("/ssb", response_model=list[SSBPoint])  # type: ignore[untyped-decorator]
 async def get_ssb_history(
     from_date: date = Query(default=date(2024, 1, 1)),
 ) -> list[Any]:
@@ -114,7 +114,7 @@ async def get_ssb_history(
     return [dict(r) for r in rows]
 
 
-@app.get("/breakdown/{price_date}", response_model=list[CoicopBreakdown])
+@app.get("/breakdown/{price_date}", response_model=list[CoicopBreakdown])  # type: ignore[untyped-decorator]
 async def get_coicop_breakdown(price_date: date) -> list[Any]:
     rows = await db().fetch(
         "SELECT coicop_code, index_value, mom_pct, n_products FROM daily_index "
@@ -126,7 +126,7 @@ async def get_coicop_breakdown(price_date: date) -> list[Any]:
     return [dict(r) for r in rows]
 
 
-@app.get("/nowcast/history", response_model=list[NowcastResponse])
+@app.get("/nowcast/history", response_model=list[NowcastResponse])  # type: ignore[untyped-decorator]
 async def get_nowcast_history(
     from_date: date = Query(default=date(2020, 1, 1)),
 ) -> list[Any]:
@@ -145,7 +145,7 @@ async def get_nowcast_history(
     return [dict(r) for r in rows]
 
 
-@app.get("/health")
+@app.get("/health")  # type: ignore[untyped-decorator]
 async def health() -> dict[str, str]:
     await db().fetchval("SELECT 1")
     return {"status": "ok"}
