@@ -10,13 +10,33 @@ def _make_df(rows):
 
 
 def test_effective_price_uses_promo():
-    df = _make_df([{"ean": "A", "price": 100.0, "is_promo": True, "promo_price": 80.0, "price_date": "2026-01-01"}])
+    df = _make_df(
+        [
+            {
+                "ean": "A",
+                "price": 100.0,
+                "is_promo": True,
+                "promo_price": 80.0,
+                "price_date": "2026-01-01",
+            }
+        ]
+    )
     out = effective_price(df)
     assert out["effective_price"].iloc[0] == 80.0
 
 
 def test_effective_price_uses_regular_when_no_promo():
-    df = _make_df([{"ean": "A", "price": 100.0, "is_promo": False, "promo_price": None, "price_date": "2026-01-01"}])
+    df = _make_df(
+        [
+            {
+                "ean": "A",
+                "price": 100.0,
+                "is_promo": False,
+                "promo_price": None,
+                "price_date": "2026-01-01",
+            }
+        ]
+    )
     out = effective_price(df)
     assert out["effective_price"].iloc[0] == 100.0
 

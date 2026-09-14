@@ -10,6 +10,7 @@ Features (all available before SSB publishes on ~the 10th):
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 import httpx
 import pandas as pd
@@ -46,7 +47,7 @@ def build_feature_row(
     raw_prices: pd.DataFrame,
     target_month: date,
     eurnok_mom: float | None,
-) -> dict:
+) -> dict[str, Any]:
     """Build a single feature dict for `target_month`."""
     month_start = target_month.replace(day=1)
     # Use data through day 21 (mimics SSB's collection window)
