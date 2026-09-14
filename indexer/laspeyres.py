@@ -125,7 +125,8 @@ async def compute_and_store(pool: asyncpg.Pool, price_date: date) -> None:
 
     # MoM: compare to same COICOP group 30 days ago
     prev_rows = await pool.fetch(
-        "SELECT coicop_code, index_value FROM daily_index WHERE price_date = ($1::date - INTERVAL '30 days')",
+        "SELECT coicop_code, index_value FROM daily_index "
+        "WHERE price_date = ($1::date - INTERVAL '30 days')",
         price_date,
     )
     if prev_rows:
