@@ -103,7 +103,7 @@ async def run(from_month: str = "2010-01", dry_run: bool = False) -> None:
         run_date = target_month  # use 1st of month as run_date for backfill
 
         feat = {col: (None if pd.isna(row.get(col)) else float(row[col])) for col in FEATURE_COLS}
-        X = pd.DataFrame([feat])[FEATURE_COLS].fillna(0.0)
+        X = pd.DataFrame([feat])[FEATURE_COLS].fillna(0.0).astype(float)
 
         point = float(model.predict(X)[0])
         ci_lo, ci_hi = _bootstrap_ci(model, X)
