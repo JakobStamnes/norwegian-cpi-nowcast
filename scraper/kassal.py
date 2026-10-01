@@ -30,7 +30,7 @@ HEADERS = {
     wait=wait_exponential(multiplier=settings.retry_wait_seconds, min=2, max=30),
     reraise=True,
 )
-async def _search(client: httpx.AsyncClient, query: str) -> list[dict]:
+async def _search(client: httpx.AsyncClient, query: str) -> list[dict[str, object]]:
     resp = await client.get(
         f"{BASE}/products",
         params={"search": query, "size": 5},
@@ -41,7 +41,9 @@ async def _search(client: httpx.AsyncClient, query: str) -> list[dict]:
     return resp.json().get("data", [])
 
 
-async def fetch_prices_batch(products: list[dict]) -> list[dict]:
+async def fetch_prices_batch(
+    products: list[dict[str, object]]
+) -> tuple[list[dict[str, object]], list[tuple[str, str, float]]]:
     """Fetch prices for a list of {ean, name} dicts via name search.
 
     Returns price rows keyed by the canonical EAN from our DB.
@@ -56,7 +58,8 @@ async def fetch_prices_batch(products: list[dict]) -> list[dict]:
         db_ean: str = product["ean"]
         name: str = product["name"]
         async with sem:
-            await asyncio.sleep(1.5)  # 2 slots / (1.5s sleep + ~1s request) ≈ 40 req/min, under 60/min limit
+            # Rate limit: 60 req/min free tier; 1.5s sleep achieves ~40 req/min
+            await asyncio.sleep(1.5)
             try:
                 hits = await _search(client, name)
                 if not hits:
@@ -107,4 +110,4 @@ async def fetch_prices_batch(products: list[dict]) -> list[dict]:
         requested=len(products),
         ean_corrections=len(ean_corrections),
     )
-    return results, ean_corrections  # type: ignore[return-value]
+    return results, ean_corrections
