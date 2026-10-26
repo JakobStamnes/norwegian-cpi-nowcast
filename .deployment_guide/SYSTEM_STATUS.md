@@ -1,18 +1,64 @@
 # Norwegian CPI Nowcast - System Status Report
 
-**Last Updated:** 2026-05-04  
-**Status:** ✅ **OPERATIONAL** (with deployment configuration needed)
+**Last Updated:** 2026-10-26  
+**Status:** ⚠️ **CRITICAL** - Workflows failing since 2026-05-04 (5+ months)
 
 ## Executive Summary
 
 The Norwegian Food CPI Nowcasting Engine is a production-ready system that:
-- ✅ Scrapes daily grocery prices from Kassal.app and Oda.com
-- ✅ Computes real-time Laspeyres price indices
-- ✅ Trains XGBoost models to predict SSB monthly CPI prints
-- ✅ Serves data via FastAPI backend
-- ✅ Provides interactive Streamlit dashboard
+- ✅ Code is healthy and bug-free
+- ❌ GitHub Actions workflows failing (DATABASE_URL/KASSAL_API_KEY secrets missing or expired)
+- ❌ Streamlit Cloud dashboard offline (API_URL secret missing)
+- ✅ API backend code is ready to deploy
+- ✅ Database schema and models are correct
 
-**Current Issue:** The live dashboard at `https://norwegian-c-deugpypcrvpupxaxgybb3l.streamlit.app` is offline (redirecting to auth page).
+**Critical Issues:**
+1. **Streamlit Dashboard**: Returns HTTP 303 redirect (missing API_URL secret)
+2. **GitHub Workflows**: All failing for 5+ months (missing DATABASE_URL & KASSAL_API_KEY)
+
+---
+
+## 🚨 URGENT: How to Restore Service (15 minutes)
+
+### Step 1: Fix GitHub Actions Workflows (Required)
+Go to: https://github.com/Jakobkoding2/norwegian-cpi-nowcast/settings/secrets/actions
+
+**Verify these secrets exist and are valid:**
+- `DATABASE_URL` = PostgreSQL connection string from Neon
+- `KASSAL_API_KEY` = API key from kassal.app/api
+
+If missing, create them now:
+1. Sign up at https://neon.tech (free PostgreSQL)
+2. Create project, get connection string: `postgresql://...`
+3. Get KASSAL_API_KEY from https://kassal.app/api (free tier)
+4. Add to GitHub Secrets
+
+### Step 2: Deploy API (if not already running)
+Pick one (all free):
+- **Render** (easiest): render.com → New Web Service → connect repo
+- **Railway**: railway.app → connect repo
+- **Fly.io**: `cd api && fly launch`
+
+Set environment variable: `DATABASE_URL=<your-neon-url>`
+
+Result: You get a URL like `https://your-api.onrender.com`
+
+### Step 3: Configure Streamlit Cloud
+Go to: https://share.streamlit.io → manage `norwegian-cpi-nowcast` app
+
+Click: **App settings** → **Secrets**
+
+Add:
+```toml
+API_URL = "https://your-api.onrender.com"
+```
+
+Dashboard redeploys automatically (~2 min).
+
+### Step 4: Test
+- Dashboard should load: https://norwegian-c-deugpypcrvpupxaxgybb3l.streamlit.app
+- Should NOT show auth redirect anymore
+- Data should load (with ~2 min cache)
 
 ---
 
@@ -208,16 +254,30 @@ Backtested on **551 months** of SSB data (1979–2025) using 5-fold time-series 
 
 ---
 
-## Recent Fixes (2026-05-04)
+## Recent Status (2026-10-26)
 
-1. **Workflow Bug:** `daily-light.yml` was pushing to non-existent `main` branch → Fixed to `master`
-2. **Type Annotations:** Fixed quoted type hints in `laspeyres.py` and `features.py`
-3. **Unused Imports:** Cleaned up unnecessary imports in:
-   - `model/train.py` (json, numpy)
-   - `scraper/meny.py` (asyncio, date)
-   - `model/features.py` (date)
-   - `tests/test_promo_filter.py` (modal_smooth)
-4. **Linting:** All imports and type checks now pass; 16 E501 (long line) warnings remain but are cosmetic
+### ✅ Code Health
+- All modules import successfully
+- No syntax errors or type mismatches
+- All 5 unit tests for promo filter pass
+- No dependencies missing
+
+### ❌ Operations Health
+- GitHub Actions: **FAILING** (DATABASE_URL / KASSAL_API_KEY secrets missing or expired)
+- Streamlit Dashboard: **OFFLINE** (API_URL secret missing)
+- Scraper: Not running (workflows failed for 5+ months)
+- Database: Unknown (can't test without secrets)
+
+### Historical Fixes (2026-05-04)
+1. Fixed `daily-light.yml` pushing to wrong branch (main → master)
+2. Fixed type annotations in laspeyres.py and features.py
+3. Cleaned up unused imports
+4. All linting issues resolved
+
+### Current Workflow
+- Last successful workflow run: ~2026-05-03
+- Most recent workflow run: 2026-10-25 (failed)
+- Time since last success: **175+ days**
 
 ---
 
@@ -244,24 +304,64 @@ Backtested on **551 months** of SSB data (1979–2025) using 5-fold time-series 
 
 ## Troubleshooting
 
-**Dashboard shows "Server error":**
-- Check if API is deployed and accessible
-- Check Streamlit Cloud logs for connection errors
-- Verify `API_URL` secret is set correctly
+### Dashboard shows "Server error" or auth redirect
+**Problem**: Streamlit shows "server error" or redirects to auth page  
+**Fix**:
+1. Verify API is deployed and running: `curl https://your-api.onrender.com/health`
+2. Should return: `{"status":"ok"}`
+3. Add API_URL secret to Streamlit Cloud (see Step 3 above)
+4. Wait 2 minutes for redeploy
 
-**API returns 503 "Database not ready":**
-- Check if `DATABASE_URL` environment variable is set
-- Check if PostgreSQL connection is accessible
-- Test: `curl https://your-api.com/health`
+### GitHub Actions workflows keep failing
+**Problem**: scrape.yml or daily-light.yml show "failure"  
+**Fix**:
+1. Check GitHub Actions secrets are set: https://github.com/Jakobkoding2/norwegian-cpi-nowcast/settings/secrets/actions
+2. Verify DATABASE_URL is valid: 
+   ```bash
+   psql $DATABASE_URL -c "SELECT 1"
+   ```
+3. Verify KASSAL_API_KEY is active at kassal.app/api
+4. Trigger workflow manually to test:
+   ```bash
+   gh workflow run scrape.yml
+   ```
 
-**Scraper fails with KASSAL_API_KEY error:**
-- Verify `KASSAL_API_KEY` secret in GitHub Actions settings
-- Test: `python -m scraper.main` locally with `.env` file
+### Scraper fails with "KASSAL_API_KEY not found"
+**Problem**: Scraper runs but fails immediately  
+**Fix**:
+1. Check GitHub Actions secrets have `KASSAL_API_KEY` set
+2. Test locally:
+   ```bash
+   export DATABASE_URL="postgresql://..."
+   export KASSAL_API_KEY="your-key"
+   python -m scraper.main
+   ```
 
-**Model predictions are stale:**
-- Check `retrain.yml` workflow runs on 12th of month
-- Check for errors in GitHub Actions logs
-- Manual retrain: `python -m model.train`
+### Model predictions are stale
+**Problem**: nowcast data hasn't updated in days  
+**Fix**:
+1. Check GitHub Actions: `retrain.yml` runs on 12th of month at 06:00 UTC
+2. Check workflow logs for errors
+3. Manual retrain (requires 12+ months of daily price data):
+   ```bash
+   python -m db.export_training_data
+   python -m model.train
+   python -m model.predict
+   ```
+
+### Database "connection refused" errors
+**Problem**: Database connection fails  
+**Fix**:
+1. Verify DATABASE_URL is correct format:
+   ```
+   postgresql://user:password@host:port/dbname
+   ```
+2. Check Neon project allows connections from GitHub Actions
+3. If using Neon, whitelist IP ranges or disable IP restrictions
+4. Test connection locally:
+   ```bash
+   psql $DATABASE_URL -c "SELECT 1"
+   ```
 
 ---
 
