@@ -6,7 +6,9 @@
 ![Python](https://img.shields.io/badge/python-3.11+-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-> **[🔴 Live Dashboard →](https://norwegian-c-deugpypcrvpupxaxgybb3l.streamlit.app)**  *(deploy guide below)*
+> ⚠️ **[Dashboard Status: OFFLINE](https://github.com/Jakobkoding2/norwegian-cpi-nowcast/blob/master/.deployment_guide/SYSTEM_STATUS.md)** — Workflows failing (missing GitHub Actions secrets). See [15-minute recovery guide](https://github.com/Jakobkoding2/norwegian-cpi-nowcast/blob/master/.deployment_guide/SYSTEM_STATUS.md#urgent-how-to-restore-service-15-minutes).
+>
+> **[📊 Live Dashboard (when online) →](https://norwegian-c-deugpypcrvpupxaxgybb3l.streamlit.app)**  *(deploy guide below)*
 
 Real-time Norwegian food CPI tracker and SSB monthly print predictor. Scrapes daily grocery prices from **Kassal.app** and **Oda.com**, computes a **Laspeyres price index** weighted by SSB Table 14700 basket weights, and uses an **XGBoost model** to predict Statistics Norway's monthly food CPI print — up to **10 days before it's published**.
 
