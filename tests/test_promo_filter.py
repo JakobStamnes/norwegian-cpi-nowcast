@@ -10,13 +10,33 @@ def _make_df(rows):
 
 
 def test_effective_price_uses_promo():
-    df = _make_df([{"ean": "A", "price": 100.0, "is_promo": True, "promo_price": 80.0, "price_date": "2026-01-01"}])
+    df = _make_df(
+        [
+            {
+                "ean": "A",
+                "price": 100.0,
+                "is_promo": True,
+                "promo_price": 80.0,
+                "price_date": "2026-01-01",
+            }
+        ]
+    )
     out = effective_price(df)
     assert out["effective_price"].iloc[0] == 80.0
 
 
 def test_effective_price_uses_regular_when_no_promo():
-    df = _make_df([{"ean": "A", "price": 100.0, "is_promo": False, "promo_price": None, "price_date": "2026-01-01"}])
+    df = _make_df(
+        [
+            {
+                "ean": "A",
+                "price": 100.0,
+                "is_promo": False,
+                "promo_price": None,
+                "price_date": "2026-01-01",
+            }
+        ]
+    )
     out = effective_price(df)
     assert out["effective_price"].iloc[0] == 100.0
 
@@ -25,8 +45,13 @@ def test_modal_smooth_absorbs_flash_sale():
     # Product priced at 39.90 every day except one flash-sale day at 19.90.
     # Modal price over the window should be 39.90, not 19.90.
     rows = [
-        {"ean": "A", "price": 39.90 if i != 3 else 19.90, "is_promo": False, "promo_price": None,
-         "price_date": f"2026-01-{i+1:02d}"}
+        {
+            "ean": "A",
+            "price": 39.90 if i != 3 else 19.90,
+            "is_promo": False,
+            "promo_price": None,
+            "price_date": f"2026-01-{i+1:02d}",
+        }
         for i in range(7)
     ]
     df = _make_df(rows)
@@ -43,8 +68,13 @@ def test_modal_smooth_sustained_promo_not_absorbed():
     # If a price genuinely drops for many days, the mode shifts too.
     # 5 days at 29.90, then 2 days at 19.90 → mode = 29.90 still for last row.
     rows = [
-        {"ean": "A", "price": 29.90 if i < 5 else 19.90, "is_promo": False, "promo_price": None,
-         "price_date": f"2026-01-{i+1:02d}"}
+        {
+            "ean": "A",
+            "price": 29.90 if i < 5 else 19.90,
+            "is_promo": False,
+            "promo_price": None,
+            "price_date": f"2026-01-{i+1:02d}",
+        }
         for i in range(7)
     ]
     df = _make_df(rows)
